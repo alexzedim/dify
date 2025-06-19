@@ -134,6 +134,7 @@ const translation = {
         selectedDescription: 'Always update to latest version',
       },
     },
+    updateTimeTitle: 'Update time',
   },
   pluginInfoModal: {
     title: 'Plugin info',
