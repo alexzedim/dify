@@ -41,6 +41,7 @@ import { AuthCategory } from '@/app/components/plugins/plugin-auth'
 import { useAllToolProviders } from '@/service/use-tools'
 import { AutoUpdateLine } from '../../base/icons/src/vender/system'
 import { timeOfDayToDayjs } from '../reference-setting-modal/auto-update-setting/utils'
+import DowngradeWarningModal from '../update-plugin/downgrade-warning-modal'
 
 const i18nPrefix = 'plugin.action'
 
@@ -88,7 +89,6 @@ const DetailHeader = ({
   const [targetVersion, setTargetVersion] = useState({
     version: latest_version,
     unique_identifier: latest_unique_identifier,
-    isDowngrade: false,
   })
   const hasNewVersion = useMemo(() => {
     if (isFromMarketplace)
@@ -116,9 +116,9 @@ const DetailHeader = ({
     setFalse: hideDowngradeWarningModal,
   }] = useBoolean(false)
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (isDowngrade?: boolean) => {
     if (isFromMarketplace) {
-      if(isAutoUpgradeEnabled && targetVersion.isDowngrade) {
+      if(isAutoUpgradeEnabled && isDowngrade) {
         showDowngradeWarningModal()
         return
       }
@@ -209,7 +209,7 @@ const DetailHeader = ({
               currentVersion={version}
               onSelect={(state) => {
                 setTargetVersion(state)
-                handleUpdate()
+                handleUpdate(state.isDowngrade)
               }}
               trigger={
                 <Badge
@@ -244,7 +244,6 @@ const DetailHeader = ({
                   setTargetVersion({
                     version: latest_version,
                     unique_identifier: latest_unique_identifier,
-                    isDowngrade: false,
                   })
                 }
                 handleUpdate()
@@ -349,7 +348,12 @@ const DetailHeader = ({
           />
         )
       }
-      { isShowDowngradeWarningModal && (<div>aaa</div>)}
+      { isShowDowngradeWarningModal && (
+        <DowngradeWarningModal
+          onCancel={hideDowngradeWarningModal}
+          onSave={handleUpdatedFromMarketplace}
+        />
+      )}
     </div>
   )
 }
