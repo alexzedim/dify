@@ -41,10 +41,8 @@ import { AuthCategory } from '@/app/components/plugins/plugin-auth'
 import { useAllToolProviders } from '@/service/use-tools'
 import { AutoUpdateLine } from '../../base/icons/src/vender/system'
 import { timeOfDayToDayjs } from '../reference-setting-modal/auto-update-setting/utils'
-import DowngradeWarningModal from '../update-plugin/downgrade-warning-modal'
 import useReferenceSetting from '../plugin-page/use-reference-setting'
 import { AUTO_UPDATE_MODE } from '../reference-setting-modal/auto-update-setting/types'
-import { useInvalidateReferenceSettings, useRemoveAutoUpgrade } from '@/service/use-plugins'
 
 const i18nPrefix = 'plugin.action'
 
@@ -127,17 +125,10 @@ const DetailHeader = ({
     return false
   }, [autoUpgradeInfo, plugin_id])
 
-  const [isShowDowngradeWarningModal, {
-    setTrue: showDowngradeWarningModal,
-    setFalse: hideDowngradeWarningModal,
-  }] = useBoolean(false)
-
+  const [isDowngrade, setIsDowngrade] = useState(false)
   const handleUpdate = async (isDowngrade?: boolean) => {
     if (isFromMarketplace) {
-      if(isAutoUpgradeEnabled && isDowngrade) {
-        showDowngradeWarningModal()
-        return
-      }
+      setIsDowngrade(!!isDowngrade)
       showUpdateModal()
       return
     }
@@ -173,20 +164,6 @@ const DetailHeader = ({
   const handleUpdatedFromMarketplace = () => {
     onUpdate()
     hideUpdateModal()
-    hideDowngradeWarningModal()
-  }
-
-  const { mutateAsync } = useRemoveAutoUpgrade()
-    const invalidateReferenceSettings = useInvalidateReferenceSettings()
-
-  const handleExcludeAndDownload = async () => {
-    await mutateAsync({
-      plugin_id,
-    })
-    invalidateReferenceSettings()
-    // TODO: missing do upgrade logic
-    handleUpdatedFromMarketplace()
-    hideDowngradeWarningModal()
   }
 
   const [isShowPluginInfo, {
@@ -362,6 +339,7 @@ const DetailHeader = ({
       {
         isShowUpdateModal && (
           <UpdateFromMarketplace
+            pluginId={plugin_id}
             payload={{
               category: detail.declaration.category,
               originalPackageInfo: {
@@ -375,16 +353,10 @@ const DetailHeader = ({
             }}
             onCancel={hideUpdateModal}
             onSave={handleUpdatedFromMarketplace}
+            isShowDowngradeWarningModal={isDowngrade && isAutoUpgradeEnabled}
           />
         )
       }
-      { isShowDowngradeWarningModal && (
-        <DowngradeWarningModal
-          onCancel={hideDowngradeWarningModal}
-          onJustDowngrade={handleUpdatedFromMarketplace}
-          onExcludeAndDowngrade={handleExcludeAndDownload}
-        />
-      )}
     </div>
   )
 }
