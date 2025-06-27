@@ -184,7 +184,8 @@ const DetailHeader = ({
       plugin_id,
     })
     invalidateReferenceSettings()
-    onUpdate()
+    // TODO: missing do upgrade logic
+    handleUpdatedFromMarketplace()
     hideDowngradeWarningModal()
   }
 
