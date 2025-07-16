@@ -20,8 +20,8 @@ import { IS_CE_EDITION } from '@/config'
 import Input from '@/app/components/base/input'
 import PremiumBadge from '@/app/components/base/premium-badge'
 import { useGlobalPublicStore } from '@/context/global-public-context'
-import { validPassword } from '@/config'
 import EmailChangeModal from './email-change-modal'
+import { validPassword } from '@/config'
 
 const titleClassName = `
   system-sm-semibold text-text-secondary
