@@ -407,7 +407,8 @@ class LLMGenerator:
         flow_id: str,
         current: str,
         instruction: str,
-        model_config: dict
+        model_config: dict,
+        ideal_output: str | None
     ) -> dict:
         app: App = db.session.query(App).filter(App.id == flow_id).first()
         last_run: Message = (db.session.query(Message)
@@ -418,7 +419,7 @@ class LLMGenerator:
             return LLMGenerator.__instruction_modify_common(
                 tenant_id=tenant_id,
                 model_config=model_config,
-                last_run={ "error": "This hasn't been run" },
+                last_run=None,
                 current=current,
                 error_message="",
                 instruction=instruction,
@@ -437,6 +438,7 @@ class LLMGenerator:
             error_message=str(last_run.error),
             instruction=instruction,
             node_type="llm",
+            ideal_output=ideal_output
         )
 
     @staticmethod
@@ -446,7 +448,8 @@ class LLMGenerator:
         node_id: str,
         current: str,
         instruction: str,
-        model_config: dict
+        model_config: dict,
+        ideal_output: str | None
     ) -> dict:
         from services.workflow_service import WorkflowService
         app: App = db.session.query(App).filter(App.id == flow_id).first()
@@ -462,11 +465,12 @@ class LLMGenerator:
             return LLMGenerator.__instruction_modify_common(
                 tenant_id=tenant_id,
                 model_config=model_config,
-                last_run={ "error": "This hasn't been run" },
+                last_run=None,
                 current=current,
                 error_message="",
                 instruction=instruction,
                 node_type="llm",
+                ideal_output=ideal_output
             )
 
         def agent_log_of(node_execution: WorkflowNodeExecutionModel) -> Sequence:
@@ -480,7 +484,7 @@ class LLMGenerator:
                     "error": event.error,
                     "data": event.data,
                 }
-            return json.dumps(map(dict_of_event, parsed))
+            return [dict_of_event(event) for event in parsed]
         last_run_dict = {
             "inputs": last_run.inputs_dict,
             "status": last_run.status,
@@ -496,6 +500,7 @@ class LLMGenerator:
             error_message=last_run.error,
             instruction=instruction,
             node_type=last_run.node_type,
+            ideal_output=ideal_output
         )
 
 
@@ -504,11 +509,12 @@ class LLMGenerator:
     def __instruction_modify_common(
         tenant_id: str,
         model_config: dict,
-        last_run: dict,
+        last_run: dict | None,
         current: str,
-        error_message: str,
+        error_message: str | None,
         instruction: str,
         node_type: str,
+        ideal_output: str | None
     ) -> dict:
         LAST_RUN = "{{#last_run#}}"
         CURRENT = "{{#current#}}"
@@ -540,6 +546,7 @@ class LLMGenerator:
                     "current": current,
                     "last_run": last_run,
                     "instruction": injected_instruction,
+                    "ideal_output": ideal_output,
                 }
             ))
         ]
