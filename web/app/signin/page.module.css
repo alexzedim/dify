@@ -5,3 +5,7 @@
 .googleIcon {
   background: center/contain url('./assets/google.svg') no-repeat;
 }
+
+.keycloakIcon {
+  background: center/contain url('./assets/keycloak.svg') no-repeat;
+}

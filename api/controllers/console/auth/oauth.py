@@ -15,6 +15,7 @@ from extensions.ext_database import db
 from libs.datetime_utils import naive_utc_now
 from libs.helper import extract_remote_ip
 from libs.oauth import GitHubOAuth, GoogleOAuth, OAuthUserInfo
+from services.keycloak_auth_service import KeycloakAuthService
 from models import Account
 from models.account import AccountStatus
 from services.account_service import AccountService, RegisterService, TenantService
@@ -59,6 +60,25 @@ class OAuthLogin(Resource):
 
         auth_url = oauth_provider.get_authorization_url(invite_token=invite_token)
         return redirect(auth_url)
+
+
+class KeycloakAuth(Resource):
+    def post(self):
+        if not KeycloakAuthService.is_keycloak_enabled():
+            return {"error": "Keycloak authentication is not enabled."}, 400
+
+        args = request.json or {}
+        username = args.get("username")
+        password = args.get("password")
+
+        if not username or not password:
+            return {"error": "Username and password are required."}, 400
+
+        try:
+            result = KeycloakAuthService.authenticate_user(username, password)
+            return result
+        except ValueError as e:
+            return {"error": str(e)}, 401
 
 
 class OAuthCallback(Resource):
@@ -183,3 +203,4 @@ def _generate_account(provider: str, user_info: OAuthUserInfo):
 
 api.add_resource(OAuthLogin, "/oauth/login/<provider>")
 api.add_resource(OAuthCallback, "/oauth/authorize/<provider>")
+api.add_resource(KeycloakAuth, "/keycloak/login")

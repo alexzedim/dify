@@ -603,6 +603,32 @@ class AuthConfig(BaseSettings):
         default=None,
     )
 
+    # Keycloak Configuration
+    KEYCLOAK_ENABLED: bool = Field(
+        description="Enable Keycloak authentication",
+        default=False,
+    )
+
+    KEYCLOAK_AUTH_SERVER_URL: Optional[str] = Field(
+        description="Keycloak authentication server URL",
+        default=None,
+    )
+
+    KEYCLOAK_REALM: Optional[str] = Field(
+        description="Keycloak realm name",
+        default=None,
+    )
+
+    KEYCLOAK_CLIENT_ID: Optional[str] = Field(
+        description="Keycloak client ID",
+        default=None,
+    )
+
+    KEYCLOAK_CLIENT_SECRET: Optional[str] = Field(
+        description="Keycloak client secret",
+        default=None,
+    )
+
     ACCESS_TOKEN_EXPIRE_MINUTES: PositiveInt = Field(
         description="Expiration time for access tokens in minutes",
         default=60,

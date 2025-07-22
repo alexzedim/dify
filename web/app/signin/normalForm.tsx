@@ -8,6 +8,7 @@ import MailAndCodeAuth from './components/mail-and-code-auth'
 import MailAndPasswordAuth from './components/mail-and-password-auth'
 import SocialAuth from './components/social-auth'
 import SSOAuth from './components/sso-auth'
+import KeycloakAuth from './components/keycloak-auth'
 import cn from '@/utils/classnames'
 import { invitationCheck } from '@/service/common'
 import { LicenseStatus } from '@/types/feature'
@@ -47,8 +48,8 @@ const NormalForm = () => {
           message,
         })
       }
-      setAllMethodsAreDisabled(!systemFeatures.enable_social_oauth_login && !systemFeatures.enable_email_code_login && !systemFeatures.enable_email_password_login && !systemFeatures.sso_enforced_for_signin)
-      setShowORLine((systemFeatures.enable_social_oauth_login || systemFeatures.sso_enforced_for_signin) && (systemFeatures.enable_email_code_login || systemFeatures.enable_email_password_login))
+      setAllMethodsAreDisabled(!systemFeatures.enable_social_oauth_login && !systemFeatures.enable_keycloak_auth && !systemFeatures.enable_email_code_login && !systemFeatures.enable_email_password_login && !systemFeatures.sso_enforced_for_signin)
+      setShowORLine((systemFeatures.enable_social_oauth_login || systemFeatures.enable_keycloak_auth || systemFeatures.sso_enforced_for_signin) && (systemFeatures.enable_email_code_login || systemFeatures.enable_email_password_login))
       updateAuthType(systemFeatures.enable_email_password_login ? 'password' : 'code')
       if (isInviteLink) {
         const checkRes = await invitationCheck({
@@ -138,6 +139,7 @@ const NormalForm = () => {
         <div className="relative">
           <div className="mt-6 flex flex-col gap-3">
             {systemFeatures.enable_social_oauth_login && <SocialAuth />}
+            {systemFeatures.enable_keycloak_auth && <KeycloakAuth />}
             {systemFeatures.sso_enforced_for_signin && <div className='w-full'>
               <SSOAuth protocol={systemFeatures.sso_enforced_for_signin_protocol} />
             </div>}
