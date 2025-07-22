@@ -424,6 +424,7 @@ class LLMGenerator:
                 error_message="",
                 instruction=instruction,
                 node_type="llm",
+                ideal_output=ideal_output
             )
         last_run_dict = {
             "query": last_run.query,
