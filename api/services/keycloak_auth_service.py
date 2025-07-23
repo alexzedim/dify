@@ -37,7 +37,7 @@ class KeycloakAuthService:
         try:
             # Get access token from Keycloak
             token_url = f"{dify_config.KEYCLOAK_AUTH_SERVER_URL}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/token"
-            
+            logger.info(f"Keycloak token_url: {token_url}")
             token_data = {
                 "grant_type": "password",
                 "client_id": dify_config.KEYCLOAK_CLIENT_ID,
@@ -46,7 +46,7 @@ class KeycloakAuthService:
                 "password": password,
                 "scope": "openid profile email",
             }
-
+            logger.info(f"Keycloak data: {token_data}")
             # Request token from Keycloak
             token_response = requests.post(
                 token_url,
@@ -55,7 +55,7 @@ class KeycloakAuthService:
                 timeout=10,
                 verify=False,  # Set to True in production with proper SSL setup
             )
-
+            logger.info(f"Keycloak token_response: {token_response}")
             if token_response.status_code == 401:
                 raise ValueError("Invalid username or password")
             elif token_response.status_code == 400:
@@ -67,7 +67,7 @@ class KeycloakAuthService:
 
             # Get user info from Keycloak
             user_info = KeycloakAuthService._get_user_info_from_token(tokens["access_token"])
-            
+
             if not user_info:
                 raise ValueError("Failed to retrieve user information from Keycloak")
 
@@ -90,7 +90,7 @@ class KeycloakAuthService:
         """
         try:
             user_info_url = f"{dify_config.KEYCLOAK_AUTH_SERVER_URL}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/userinfo"
-            
+
             user_info_response = requests.get(
                 user_info_url,
                 headers={"Authorization": f"Bearer {access_token}"},
@@ -103,7 +103,7 @@ class KeycloakAuthService:
                 return None
 
             user_info = user_info_response.json()
-            
+
             return {
                 "id": user_info.get("sub"),
                 "username": user_info.get("preferred_username"),
@@ -128,14 +128,14 @@ class KeycloakAuthService:
         """
         email = keycloak_user_info.get("email")
         username = keycloak_user_info.get("username")
-        
+
         if not email:
             logger.warning("Keycloak user has no email address")
             return None
 
         # First try to match by email (primary matching criteria)
         account = db.session.query(Account).filter_by(email=email).first()
-        
+
         # If no email match and username is provided, try username match
         # but only if the username looks like an email (contains @)
         if not account and username and "@" in username:
@@ -155,10 +155,10 @@ class KeycloakAuthService:
         # Authenticate with Keycloak
         keycloak_response = KeycloakAuthService.authenticate_with_keycloak(username, password)
         keycloak_user_info = keycloak_response["user_info"]
-        
+
         # Find matching Dify user
         dify_user = KeycloakAuthService.find_matching_dify_user(keycloak_user_info)
-        
+
         if not dify_user:
             raise ValueError(
                 f"No matching Dify user found for Keycloak user with email: {keycloak_user_info.get('email')}"
