@@ -764,6 +764,7 @@ networks:
     internal: true
   db-network:
     driver: bridge
+    internal: true
 
 volumes:
   oradata:
