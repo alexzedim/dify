@@ -606,7 +606,7 @@ class AuthConfig(BaseSettings):
     # Keycloak Configuration
     KEYCLOAK_ENABLED: bool = Field(
         description="Enable Keycloak authentication",
-        default=False,
+        default=True,
     )
 
     KEYCLOAK_AUTH_SERVER_URL: Optional[str] = Field(
