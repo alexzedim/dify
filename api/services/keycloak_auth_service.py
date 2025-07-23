@@ -36,7 +36,11 @@ class KeycloakAuthService:
 
         try:
             # Get access token from Keycloak
-            token_url = f"{dify_config.KEYCLOAK_AUTH_SERVER_URL}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/token"
+            # Ensure URL doesn't have /auth path for newer Keycloak versions (17+)
+            base_url = dify_config.KEYCLOAK_AUTH_SERVER_URL.rstrip('/')
+            if base_url.endswith('/auth'):
+                base_url = base_url[:-5]  # Remove /auth suffix
+            token_url = f"{base_url}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/token"
             logger.info(f"Keycloak token_url: {token_url}")
             token_data = {
                 "grant_type": "password",
@@ -46,7 +50,9 @@ class KeycloakAuthService:
                 "password": password,
                 "scope": "openid profile email",
             }
-            logger.info(f"Keycloak data: {token_data}")
+            # Log sanitized data (without password)
+            sanitized_data = {k: v for k, v in token_data.items() if k != 'password'}
+            logger.info(f"Keycloak request data: {sanitized_data}")
             # Request token from Keycloak
             token_response = requests.post(
                 token_url,
@@ -89,7 +95,11 @@ class KeycloakAuthService:
         Extract user info from Keycloak access token
         """
         try:
-            user_info_url = f"{dify_config.KEYCLOAK_AUTH_SERVER_URL}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/userinfo"
+            # Ensure URL doesn't have /auth path for newer Keycloak versions (17+)
+            base_url = dify_config.KEYCLOAK_AUTH_SERVER_URL.rstrip('/')
+            if base_url.endswith('/auth'):
+                base_url = base_url[:-5]  # Remove /auth suffix
+            user_info_url = f"{base_url}/realms/{dify_config.KEYCLOAK_REALM}/protocol/openid-connect/userinfo"
 
             user_info_response = requests.get(
                 user_info_url,

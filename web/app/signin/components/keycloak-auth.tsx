@@ -50,7 +50,12 @@ export default function KeycloakAuth(props: KeycloakAuthProps) {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Authentication failed')
+        let errorMsg = result.error || 'Authentication failed';
+        try {
+          const errorJSON = JSON.parse(errorMsg);
+          errorMsg = errorJSON.error;
+        } catch {}
+        throw new Error(errorMsg);
       }
 
       if (result.access_token && result.refresh_token) {
