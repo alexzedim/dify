@@ -99,6 +99,34 @@ services:
       ENABLE_WEBSITE_JINAREADER: ${ENABLE_WEBSITE_JINAREADER:-true}
       ENABLE_WEBSITE_FIRECRAWL: ${ENABLE_WEBSITE_FIRECRAWL:-true}
       ENABLE_WEBSITE_WATERCRAWL: ${ENABLE_WEBSITE_WATERCRAWL:-true}
+
+  # Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-postgres}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-difyai123456}
+      KC_HOSTNAME: ${KC_HOSTNAME}
+      KC_HOSTNAME_PORT: ${KC_HOSTNAME_PORT}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT}
+      KC_HOSTNAME_STRICT_HTTPS: ${KC_HOSTNAME_STRICT_HTTPS}
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL}
+      KC_METRICS_ENABLED: ${KC_METRICS_ENABLED}
+      KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    command: start-dev
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    networks:
+      - keycloak-network
+    restart: unless-stopped
+
   # The postgres database.
   db:
     image: postgres:15-alpine
@@ -732,6 +760,8 @@ networks:
   opensearch-net:
     driver: bridge
     internal: true
+  keycloak-network:
+    driver: bridge
 
 volumes:
   oradata:
