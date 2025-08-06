@@ -5,8 +5,10 @@ from urllib.parse import urlencode
 
 from configs import dify_config
 from models.account import Account
-from services.account_service import AccountService
+from services.account_service import AccountService, TenantService
+from events.tenant_event import tenant_was_created
 from extensions.ext_database import db
+from constants.languages import languages
 
 logger = logging.getLogger(__name__)
 
@@ -154,11 +156,55 @@ class KeycloakAuthService:
         return account
 
     @staticmethod
+    def _create_dify_user_from_keycloak(keycloak_user_info: dict, password: str) -> Account:
+        """
+        Create a new Dify user account based on Keycloak user information
+        """
+        email = keycloak_user_info.get("email")
+        first_name = keycloak_user_info.get("first_name", "")
+        last_name = keycloak_user_info.get("last_name", "")
+        username = keycloak_user_info.get("username", "")
+        
+        if not email:
+            raise ValueError("Keycloak user must have an email address to create Dify account")
+        
+        # Create display name from available information
+        if first_name and last_name:
+            display_name = f"{first_name} {last_name}".strip()
+        elif first_name:
+            display_name = first_name
+        elif username:
+            display_name = username
+        else:
+            display_name = email.split('@')[0]  # Use email prefix as fallback
+        
+        try:
+            # Create the account using AccountService
+            account = AccountService.create_account(
+                email=email,
+                name=display_name,
+                interface_language=languages[0],  # Use default language
+                password=password,  # Store the password from Keycloak authentication
+                interface_theme="light",
+                is_setup=False
+            )
+            
+            # Create a workspace for the user
+            TenantService.create_owner_tenant_if_not_exist(account)
+            
+            logger.info(f"Successfully created Dify account for Keycloak user: {email}")
+            return account
+            
+        except Exception as e:
+            logger.error(f"Failed to create Dify account for Keycloak user {email}: {str(e)}")
+            raise ValueError(f"Failed to create Dify account: {str(e)}")
+
+    @staticmethod
     def authenticate_user(username: str, password: str) -> dict:
         """
         Main authentication method that:
         1. Authenticates with Keycloak
-        2. Finds matching Dify user
+        2. Finds matching Dify user or creates new one
         3. Creates Dify session
         4. Returns combined response
         """
@@ -170,9 +216,9 @@ class KeycloakAuthService:
         dify_user = KeycloakAuthService.find_matching_dify_user(keycloak_user_info)
 
         if not dify_user:
-            raise ValueError(
-                f"No matching Dify user found for Keycloak user with email: {keycloak_user_info.get('email')}"
-            )
+            # Create new Dify account based on Keycloak user data
+            dify_user = KeycloakAuthService._create_dify_user_from_keycloak(keycloak_user_info, password)
+            logger.info(f"Created new Dify account for Keycloak user: {keycloak_user_info.get('email')}")
 
         # Generate Dify session tokens
         token_pair = AccountService.login(account=dify_user)
